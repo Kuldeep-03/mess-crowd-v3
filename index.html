@@ -9,7 +9,12 @@
 
 <h1>🍽️ Smart Mess Crowd Management</h1>
 
-<!-- ================= USER INPUT ================= -->
+<!-- ===== ADMIN LOGIN TOGGLE ===== -->
+<div class="admin-login">
+  <button onclick="toggleAdmin()">🔐 Admin Login</button>
+</div>
+
+<!-- ===== USER INPUT ===== -->
 <div class="inputs">
 
   <label>Meal Type</label>
@@ -49,14 +54,14 @@
   <button onclick="runPrediction()">Predict</button>
 </div>
 
-<!-- ================= PREDICTION OUTPUT ================= -->
+<!-- ===== OUTPUT ===== -->
 <div class="output">
   <h2 id="level"></h2>
   <p id="details"></p>
   <p id="forecast"></p>
 </div>
 
-<!-- ================= GRAPHS ================= -->
+<!-- ===== GRAPHS ===== -->
 <div class="output">
   <h3>📈 Congestion Trend</h3>
   <canvas id="mliChart"></canvas>
@@ -67,7 +72,7 @@
   <canvas id="forecastChart"></canvas>
 </div>
 
-<!-- ================= WAIT TIME ================= -->
+<!-- ===== WAIT TIME ===== -->
 <div class="output">
   <h3>⏱️ Recommended Wait Time</h3>
   <div class="wait-bar">
@@ -76,22 +81,26 @@
   <p id="waitText"></p>
 </div>
 
-<!-- ================= HEATMAP ================= -->
+<!-- ===== HEATMAP ===== -->
 <div class="output">
-  <h3>🔥 Congestion Heatmap (Time-Based)</h3>
+  <h3>🔥 Congestion Heatmap</h3>
   <canvas id="heatmap"></canvas>
 </div>
 
-<!-- ================= ADMIN DASHBOARD ================= -->
+<!-- ===== QR SHARE ===== -->
+<div class="output">
+  <h3>📷 Share Live Status</h3>
+  <img id="qr">
+</div>
+
+<!-- ===== ADMIN DASHBOARD ===== -->
 <div class="admin">
   <h2>🛠️ Admin Dashboard</h2>
-
   <pre id="adminSummary">No data yet</pre>
-
   <button onclick="exportCSV()">⬇️ Export Daily CSV</button>
 </div>
 
-<!-- ================= SCRIPTS ================= -->
+<!-- ===== SCRIPTS ===== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="script.js"></script>
 
