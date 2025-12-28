@@ -132,7 +132,7 @@ function decisionAdvice(level, tr, recovery) {
 
 // ================== GRAPH FUNCTIONS ==================
 function drawMLIChart(history) {
-  if (history.length < 2) return;
+  if (history.length === 0) return;
 
   const ctx = document.getElementById("mliChart").getContext("2d");
   if (mliChart) mliChart.destroy();
