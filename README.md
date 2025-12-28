@@ -21,9 +21,6 @@ This project proposes a realistic, systems-engineering–driven solution that pr
 ### Low Congestion Scenario
 ![Low Crowd](screenshots/low_crowd.png)
 
-### Short-Term Forecast View
-![Forecast](screenshots/forecast.png)
-
 ---
 
 ## Problem Statement
@@ -124,135 +121,74 @@ The system estimates congestion for:
 - +10 minutes
 - +20 minutes
 
-This allows students to plan arrival time rather than reacting late.
-
 ---
 
 ### Scenario-Based Risk Analysis
-Instead of relying on a single estimate, the system internally evaluates:
 - Best-case scenario
 - Average-case scenario
 - Worst-case scenario
 
-Recommendations are conservative and safety-oriented.
-
----
-
-### Capacity Saturation Trigger
-When seating occupancy exceeds 85 percent, the system automatically prioritizes seat turnover over queue length, reflecting real throughput limits.
-
 ---
 
 ### Minimal Admin Intervention
-The system is designed to avoid continuous staff involvement.
-
-- Predictions run automatically under normal conditions
-- Mess staff do not monitor dashboards
-- Manual input is required only during rare abnormal events such as:
-  - Batch cooking delays
-  - Equipment failure
-  - Sudden surges
-
-Admin interaction is limited to a single-tap override, not continuous supervision.
-
----
-
-### Uncertainty & Confidence Modeling
-Predictions include a confidence score, which decreases under:
-- High service variability
-- Frequent queue disruptions
-
-The system communicates uncertainty transparently instead of forcing false precision.
-
----
-
-### Operational Metrics & Feedback Loop (Future-Ready)
-Planned metrics include:
-- Peak congestion duration
-- Average waiting time
-- Seat turnover rate
-- Prediction error drift
-
-These enable gradual tuning without premature ML deployment.
+Predictions run automatically.
+Manual override only during abnormal events.
 
 ---
 
 ## Why Machine Learning Is Not Used (Yet)
-
-Machine learning is intentionally deferred, not rejected.
-
-Reasons:
-- No historical labeled data (cold-start risk)
-- High noise due to human behavior and batch cooking
-- Need for explainable, trust-based decisions
-- Rule-based models perform better in early deployment
-
-Planned ML integration:
-- Service rate prediction
-- Peak window detection
-- Adaptive weight tuning
-
-The architecture is ML-ready by design.
+ML is deferred due to cold-start risk, high noise, and need for explainability.
+The system is ML-ready by design.
 
 ---
 
 ## Technology Stack
-- Web-based prototype (HTML, CSS, JavaScript)
-- Google Cloud architecture (planned)
-- Firebase / Firestore (planned backend)
-- BigQuery (future analytics)
+- HTML, CSS, JavaScript
+- Google Cloud (planned)
+- Firebase / Firestore (planned)
 
 ---
 
 ## Ethics & Privacy
 - No individual tracking
-- All inputs are aggregated
-- No surveillance or identification
-- Transparent system behavior
+- Aggregated inputs only
+- Transparent behavior
 
 ---
 
 ## Expected Impact
-- Reduced peak-hour congestion
+- Reduced congestion
 - Improved student experience
 - Safer mess operations
-- Data-driven decision support
-
----
-
-## Conclusion
-This project demonstrates how systems thinking, rather than blind automation, leads to deployable solutions. By embracing uncertainty, capacity constraints, and human behavior, the system provides realistic and actionable guidance for everyday campus life.
 
 ---
 
 ## Author Contribution
-- Problem identification
 - Systems modeling
 - Architecture design
 - Prototype logic
-- Ethical framing
 
 ---
 
 ## Project Structure
 
+```
 mess-crowd-v3/
-├── index.html # Main UI
-├── style.css # Styling
-├── script.js # Core prediction logic
-├── README.md # Project documentation
-├── LICENSE # MIT License
+├── index.html        # Main UI
+├── style.css         # Styling
+├── script.js         # Core logic
+├── README.md         # Documentation
+├── LICENSE           # MIT License
 └── screenshots/
-├── high_crowd.png
-├── medium_crowd.png
-├── low_crowd.png
-└── forecast.png
-
+    ├── high_crowd.png
+    ├── medium_crowd.png
+    ├── low_crowd.png
+    └── forecast.png
+```
 
 ---
 
 ## Prototype Status
-- Core prediction engine implemented
+- Core engine implemented
 - Meal-aware switching active
-- Uncertainty and forecasting enabled
-- Ready for deployment extension
+- Forecasting enabled
