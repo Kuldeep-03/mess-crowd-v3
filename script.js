@@ -1,10 +1,31 @@
+console.log("Smart Mess Predictor Loaded");
+
+// ================== FIREBASE CONFIG ==================
+// 🔴 Replace with your Firebase project keys
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // ================== GLOBAL MEMORY ==================
 let previousMLI = null;
 let previousQueue = null;
+
 let mliHistory = [];
+let mealHistory = {
+  Breakfast: [],
+  Lunch: [],
+  Dinner: []
+};
 
 let mliChart = null;
 let forecastChart = null;
+let heatmapChart = null;
 
 // ================== AUTO TIME CONTEXT ==================
 function autoTimeContext() {
@@ -17,24 +38,16 @@ function autoTimeContext() {
 
 // ================== MAPPING ==================
 function mapQueue(q) {
-  if (q === "Low") return 15;
-  if (q === "Medium") return 40;
-  return 70;
+  return q === "Low" ? 15 : q === "Medium" ? 40 : 70;
 }
-
 function mapService(s) {
-  if (s === "Fast") return 0.8;
-  if (s === "Moderate") return 0.6;
-  return 0.4;
+  return s === "Fast" ? 0.8 : s === "Moderate" ? 0.6 : 0.4;
 }
-
 function mapDefaulters(d) {
-  if (d === "Low") return 0.9;
-  if (d === "Medium") return 0.6;
-  return 0.3;
+  return d === "Low" ? 0.9 : d === "Medium" ? 0.6 : 0.3;
 }
 
-// ================== CORE LOGIC ==================
+// ================== CORE MLI ==================
 function calculateMLI(queue, seats, service, integrity, eatTime, momentum, peak) {
   const seatRelease = 100 / eatTime;
 
@@ -49,94 +62,85 @@ function calculateMLI(queue, seats, service, integrity, eatTime, momentum, peak)
   return Math.min(1, Math.max(0, mli * peak));
 }
 
-// ================== HELPERS ==================
-function classify(v) {
-  if (v >= 0.75) return "High";
-  if (v >= 0.4) return "Medium";
+// ================== CLASSIFICATION ==================
+function classify(m) {
+  if (m >= 0.75) return "High";
+  if (m >= 0.4) return "Medium";
   return "Low";
 }
 
-function confidence(integrity, service, seats, momentum) {
-  let v =
-    (1 - integrity) * 0.3 +
-    (1 - service) * 0.3 +
-    (seats > 85 ? 0.2 : 0) +
-    Math.abs(momentum) * 0.2;
-  return Math.max(30, Math.round((1 - v) * 100));
+// ================== WAIT LOGIC ==================
+function recommendedWait(mli) {
+  if (mli >= 0.8) return "20–25 min";
+  if (mli >= 0.65) return "15–20 min";
+  if (mli >= 0.45) return "8–15 min";
+  if (mli >= 0.3) return "3–5 min";
+  return "No waiting recommended";
 }
 
+// ================== SMOOTHING ==================
 function smoothMLI(v) {
   mliHistory.push(v);
-  if (mliHistory.length > 8) mliHistory.shift();
+  if (mliHistory.length > 12) mliHistory.shift();
   return mliHistory.reduce((a, b) => a + b, 0) / mliHistory.length;
 }
 
-function trend(curr) {
-  if (previousMLI === null) return "Stable";
-  if (curr - previousMLI > 0.05) return "Increasing";
-  if (previousMLI - curr > 0.05) return "Decreasing";
-  return "Stable";
+// ================== FORECAST ==================
+function futureMLI(m) {
+  return [m, Math.min(1, m + 0.1), Math.min(1, m + 0.2)];
 }
 
-function futureMLI(m, t) {
-  if (t === "Increasing") return [m, m + 0.1, m + 0.2].map(v => Math.min(1, v));
-  if (t === "Decreasing") return [m, m - 0.1, m - 0.2].map(v => Math.max(0, v));
-  return [m, m, m];
-}
+// ================== HEATMAP ==================
+function drawHeatmap() {
+  const ctx = document.getElementById("heatmap").getContext("2d");
 
-function recommendedWait(level) {
-  if (level === "High") return 20;
-  if (level === "Medium") return 8;
-  return 0;
+  const data = mliHistory.map(v => Math.round(v * 100));
+
+  if (heatmapChart) heatmapChart.destroy();
+
+  heatmapChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: data.map((_, i) => `T${i + 1}`),
+      datasets: [{
+        label: "Congestion Heat",
+        data,
+        backgroundColor: data.map(v =>
+          v < 40 ? "#2a9d8f" : v < 70 ? "#f4a261" : "#e63946"
+        )
+      }]
+    },
+    options: { scales: { y: { min: 0, max: 100 } } }
+  });
 }
 
 // ================== CHARTS ==================
-function drawMLIChart(history, conf) {
-  if (history.length < 2) return;
-
+function drawMLIChart(history) {
   const ctx = document.getElementById("mliChart").getContext("2d");
   if (mliChart) mliChart.destroy();
-
-  const values = history.map(v => v * 100);
-  const band = (100 - conf) * 0.4;
 
   mliChart = new Chart(ctx, {
     type: "line",
     data: {
-      labels: values.map((_, i) => `T${i + 1}`),
-      datasets: [
-        {
-          label: "MLI %",
-          data: values,
-          borderColor: "#e63946",
-          tension: 0.3
-        },
-        {
-          label: "Capacity Limit",
-          data: Array(values.length).fill(80),
-          borderColor: "#000",
-          borderDash: [5, 5]
-        },
-        {
-          label: "Confidence Band",
-          data: values.map(v => Math.min(100, v + band)),
-          backgroundColor: "rgba(230,57,70,0.15)",
-          fill: "+1"
-        },
-        {
-          data: values.map(v => Math.max(0, v - band)),
-          fill: false
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { min: 0, max: 100 } }
+      labels: history.map((_, i) => `Prediction ${i + 1}`),
+      datasets: [{
+        label: "MLI %",
+        data: history.map(v => Math.round(v * 100)),
+        borderColor: "#e63946",
+        fill: true,
+        backgroundColor: "rgba(230,57,70,0.15)"
+      },
+      {
+        label: "Capacity Limit",
+        data: Array(history.length).fill(80),
+        borderDash: [5,5],
+        borderColor: "#000"
+      }]
     }
   });
 }
 
-function drawForecastChart(f) {
+function drawForecastChart(future) {
   const ctx = document.getElementById("forecastChart").getContext("2d");
   if (forecastChart) forecastChart.destroy();
 
@@ -145,67 +149,66 @@ function drawForecastChart(f) {
     data: {
       labels: ["Now", "+10 min", "+20 min"],
       datasets: [{
-        data: f.map(v => v * 100),
+        data: future.map(v => Math.round(v * 100)),
         backgroundColor: ["#2a9d8f", "#f4a261", "#e63946"]
       }]
-    },
-    options: { scales: { y: { min: 0, max: 100 } } }
+    }
   });
+}
+
+// ================== ADMIN ==================
+function updateAdminDashboard() {
+  if (!mliHistory.length) return;
+
+  const avg = Math.round(mliHistory.reduce((a,b)=>a+b,0)/mliHistory.length*100);
+  const peak = Math.round(Math.max(...mliHistory)*100);
+
+  document.getElementById("adminSummary").innerText =
+    `Average congestion: ${avg}%\nPeak congestion: ${peak}%\nPredictions logged: ${mliHistory.length}`;
+}
+
+function exportCSV() {
+  let csv = "Time,MLI (%),Level\n";
+  mliHistory.forEach((v,i)=>{
+    csv += `${i+1},${Math.round(v*100)},${classify(v)}\n`;
+  });
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "mess_summary.csv";
+  a.click();
 }
 
 // ================== MAIN ==================
 function runPrediction() {
-  // ---- ELEMENTS (FIXED) ----
-  const mealEl = document.getElementById("meal");
-  const queueEl = document.getElementById("queue");
-  const seatsEl = document.getElementById("seats");
-  const serviceEl = document.getElementById("service");
-  const defaultersEl = document.getElementById("defaulters");
-  const eatTimeEl = document.getElementById("eatTime");
-
-  const levelEl = document.getElementById("level");
-  const detailsEl = document.getElementById("details");
-  const forecastEl = document.getElementById("forecast");
-  const waitFill = document.getElementById("waitFill");
-  const waitText = document.getElementById("waitText");
-
-  // ---- AUTO TIME ----
   const auto = autoTimeContext();
-  if (auto.meal) mealEl.value = auto.meal;
+  if (auto.meal) document.getElementById("meal").value = auto.meal;
 
-  // ---- INPUTS ----
   const queue = mapQueue(queueEl.value);
   const seats = +seatsEl.value;
   const service = mapService(serviceEl.value);
   const integrity = mapDefaulters(defaultersEl.value);
   const eatTime = +eatTimeEl.value;
 
-  let momentum = previousQueue !== null ? (queue - previousQueue) / 70 : 0;
+  let momentum = previousQueue ? (queue - previousQueue) / 70 : 0;
   previousQueue = queue;
 
-  // ---- CALC ----
   const raw = calculateMLI(queue, seats, service, integrity, eatTime, momentum, auto.peak);
   const mli = smoothMLI(raw);
 
-  const lvl = classify(mli);
-  const tr = trend(mli);
-  const fut = futureMLI(mli, tr);
-  const conf = confidence(integrity, service, seats, momentum);
-  const wait = recommendedWait(lvl);
+  const future = futureMLI(mli);
+  const wait = recommendedWait(mli);
 
   previousMLI = mli;
 
-  // ---- OUTPUT ----
-  levelEl.innerText = `${lvl} Crowd (MLI: ${Math.round(mli * 100)})`;
-  detailsEl.innerText = `Confidence: ${conf}% | Trend: ${tr}`;
-  forecastEl.innerText =
-    `Forecast → ${classify(fut[0])}, ${classify(fut[1])}, ${classify(fut[2])}`;
+  level.innerText = `${classify(mli)} Crowd (MLI: ${Math.round(mli*100)})`;
+  forecast.innerText = `Recommended wait: ${wait}`;
 
-  // ---- VISUALS ----
-  drawMLIChart(mliHistory, conf);
-  drawForecastChart(fut);
+  drawMLIChart(mliHistory);
+  drawForecastChart(future);
+  drawHeatmap();
+  updateAdminDashboard();
 
-  waitFill.style.width = `${Math.min(100, wait * 5)}%`;
-  waitText.innerText =
-    wait === 0 ? "No waiting recommended" : `Recommended wait: ~${wait} minutes`;
+  db.ref("liveMLI").push({ value: mli, time: Date.now() });
 }
