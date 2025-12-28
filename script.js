@@ -1,3 +1,4 @@
+alert("script.js loaded");
 // ================== GLOBAL MEMORY ==================
 let previousMLI = null;
 let previousQueue = null;
