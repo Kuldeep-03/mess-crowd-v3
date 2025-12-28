@@ -105,4 +105,14 @@
 <script src="script.js"></script>
 
 </body>
+  <button onclick="toggleDark()">🌙 Dark Mode</button>
+
+<div id="adminModal" class="modal">
+  <div class="modal-box">
+    <h3>🔐 Admin Login</h3>
+    <input type="password" id="adminPass" placeholder="Password">
+    <button onclick="adminLogin()">Login</button>
+    <p id="adminError"></p>
+  </div>
+</div>
 </html>
