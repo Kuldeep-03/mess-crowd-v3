@@ -1,7 +1,10 @@
+/* ===== BASE ===== */
 body {
   font-family: Arial, sans-serif;
   background: #f4f6f8;
   padding: 30px;
+  color: #333;
+  transition: background 0.3s, color 0.3s;
 }
 
 h1 {
@@ -9,6 +12,7 @@ h1 {
   margin-bottom: 20px;
 }
 
+/* ===== SECTIONS ===== */
 .inputs, .output, .admin {
   background: white;
   padding: 20px;
@@ -16,8 +20,10 @@ h1 {
   max-width: 650px;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: background 0.3s;
 }
 
+/* ===== LABELS & INPUTS ===== */
 label {
   font-weight: bold;
   margin-top: 10px;
@@ -28,8 +34,11 @@ input, select {
   width: 100%;
   padding: 6px;
   margin-top: 4px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
 }
 
+/* ===== BUTTONS ===== */
 button {
   width: 100%;
   margin-top: 15px;
@@ -38,15 +47,25 @@ button {
   color: white;
   border: none;
   border-radius: 6px;
+  cursor: pointer;
 }
 
-.admin { display: none; }
+button:hover {
+  background: #21867a;
+}
 
+/* ===== ADMIN ===== */
+.admin {
+  display: none;
+}
+
+/* ===== CANVAS ===== */
 canvas {
   width: 100% !important;
   max-height: 260px;
 }
 
+/* ===== WAIT BAR ===== */
 .wait-bar {
   height: 18px;
   background: #e0e0e0;
@@ -61,6 +80,45 @@ canvas {
   transition: width 0.6s;
 }
 
-@media(max-width:600px){
-  body{padding:15px}
+/* ===== DARK MODE ===== */
+body.dark {
+  background: #121212;
+  color: #eee;
+}
+
+body.dark .inputs,
+body.dark .output,
+body.dark .admin {
+  background: #1e1e1e;
+}
+
+/* ===== ADMIN MODAL ===== */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 999;
+}
+
+.modal-box {
+  background: white;
+  padding: 20px;
+  width: 280px;
+  margin: 120px auto;
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* Dark mode modal */
+body.dark .modal-box {
+  background: #1e1e1e;
+  color: #eee;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+  body {
+    padding: 15px;
+  }
 }
