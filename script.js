@@ -1,56 +1,35 @@
 console.log("Smart Mess Predictor Loaded");
 
-// ================== FIREBASE CONFIG ==================
-// 🔴 Replace with your Firebase project keys
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// ================== GLOBAL MEMORY ==================
-let previousMLI = null;
+// ================== GLOBAL STATE ==================
 let previousQueue = null;
-
 let mliHistory = [];
-let mealHistory = {
-  Breakfast: [],
-  Lunch: [],
-  Dinner: []
-};
+let mliChart, forecastChart, heatmapChart;
+let isAdmin = false;
 
-let mliChart = null;
-let forecastChart = null;
-let heatmapChart = null;
+// ================== ADMIN TOGGLE ==================
+function toggleAdmin() {
+  isAdmin = !isAdmin;
+  document.querySelector(".admin").style.display = isAdmin ? "block" : "none";
+  alert(isAdmin ? "Admin mode enabled" : "Admin mode disabled");
+}
 
 // ================== AUTO TIME CONTEXT ==================
 function autoTimeContext() {
-  const hour = new Date().getHours();
-  if (hour >= 7 && hour <= 9) return { meal: "Breakfast", peak: 1.15 };
-  if (hour >= 12 && hour <= 14) return { meal: "Lunch", peak: 1.2 };
-  if (hour >= 19 && hour <= 21) return { meal: "Dinner", peak: 1.25 };
+  const h = new Date().getHours();
+  if (h >= 7 && h <= 9) return { meal: "Breakfast", peak: 1.15 };
+  if (h >= 12 && h <= 14) return { meal: "Lunch", peak: 1.2 };
+  if (h >= 19 && h <= 21) return { meal: "Dinner", peak: 1.25 };
   return { meal: null, peak: 1.0 };
 }
 
-// ================== MAPPING ==================
-function mapQueue(q) {
-  return q === "Low" ? 15 : q === "Medium" ? 40 : 70;
-}
-function mapService(s) {
-  return s === "Fast" ? 0.8 : s === "Moderate" ? 0.6 : 0.4;
-}
-function mapDefaulters(d) {
-  return d === "Low" ? 0.9 : d === "Medium" ? 0.6 : 0.3;
-}
+// ================== MAPPERS ==================
+const mapQueue = q => q === "Low" ? 15 : q === "Medium" ? 40 : 70;
+const mapService = s => s === "Fast" ? 0.8 : s === "Moderate" ? 0.6 : 0.4;
+const mapDefaulters = d => d === "Low" ? 0.9 : d === "Medium" ? 0.6 : 0.3;
 
 // ================== CORE MLI ==================
 function calculateMLI(queue, seats, service, integrity, eatTime, momentum, peak) {
   const seatRelease = 100 / eatTime;
-
   let mli =
     0.3 * (queue / 70) +
     0.3 * (seats / 100) +
@@ -58,157 +37,119 @@ function calculateMLI(queue, seats, service, integrity, eatTime, momentum, peak)
     0.1 * (1 - integrity) +
     0.05 * Math.min(1, 1 / seatRelease) +
     0.1 * momentum;
-
   return Math.min(1, Math.max(0, mli * peak));
 }
 
-// ================== CLASSIFICATION ==================
-function classify(m) {
-  if (m >= 0.75) return "High";
-  if (m >= 0.4) return "Medium";
-  return "Low";
-}
+// ================== CLASSIFY ==================
+const classify = m => m >= 0.75 ? "High" : m >= 0.4 ? "Medium" : "Low";
 
 // ================== WAIT LOGIC ==================
 function recommendedWait(mli) {
-  if (mli >= 0.8) return "20–25 min";
-  if (mli >= 0.65) return "15–20 min";
-  if (mli >= 0.45) return "8–15 min";
-  if (mli >= 0.3) return "3–5 min";
-  return "No waiting recommended";
+  if (mli >= 0.8) return { text: "20–25 min", mins: 22 };
+  if (mli >= 0.65) return { text: "15–20 min", mins: 17 };
+  if (mli >= 0.45) return { text: "8–15 min", mins: 10 };
+  if (mli >= 0.3) return { text: "3–5 min", mins: 4 };
+  return { text: "No waiting recommended", mins: 0 };
 }
 
-// ================== SMOOTHING ==================
+// ================== SMOOTH ==================
 function smoothMLI(v) {
   mliHistory.push(v);
   if (mliHistory.length > 12) mliHistory.shift();
-  return mliHistory.reduce((a, b) => a + b, 0) / mliHistory.length;
+  return mliHistory.reduce((a,b)=>a+b,0)/mliHistory.length;
 }
 
 // ================== FORECAST ==================
-function futureMLI(m) {
-  return [m, Math.min(1, m + 0.1), Math.min(1, m + 0.2)];
-}
-
-// ================== HEATMAP ==================
-function drawHeatmap() {
-  const ctx = document.getElementById("heatmap").getContext("2d");
-
-  const data = mliHistory.map(v => Math.round(v * 100));
-
-  if (heatmapChart) heatmapChart.destroy();
-
-  heatmapChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: data.map((_, i) => `T${i + 1}`),
-      datasets: [{
-        label: "Congestion Heat",
-        data,
-        backgroundColor: data.map(v =>
-          v < 40 ? "#2a9d8f" : v < 70 ? "#f4a261" : "#e63946"
-        )
-      }]
-    },
-    options: { scales: { y: { min: 0, max: 100 } } }
-  });
-}
+const futureMLI = m => [m, Math.min(1,m+0.1), Math.min(1,m+0.2)];
 
 // ================== CHARTS ==================
 function drawMLIChart(history) {
-  const ctx = document.getElementById("mliChart").getContext("2d");
+  const ctx = document.getElementById("mliChart");
   if (mliChart) mliChart.destroy();
-
   mliChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: history.map((_, i) => `Prediction ${i + 1}`),
-      datasets: [{
-        label: "MLI %",
-        data: history.map(v => Math.round(v * 100)),
-        borderColor: "#e63946",
-        fill: true,
-        backgroundColor: "rgba(230,57,70,0.15)"
-      },
-      {
-        label: "Capacity Limit",
-        data: Array(history.length).fill(80),
-        borderDash: [5,5],
-        borderColor: "#000"
-      }]
-    }
+    type:"line",
+    data:{
+      labels:history.map((_,i)=>`Prediction ${i+1}`),
+      datasets:[
+        { label:"MLI %", data:history.map(v=>v*100), borderColor:"#e63946", fill:true, backgroundColor:"rgba(230,57,70,0.15)" },
+        { label:"Capacity Limit", data:Array(history.length).fill(80), borderDash:[5,5], borderColor:"#000" }
+      ]
+    },
+    options:{ scales:{ y:{min:0,max:100} } }
   });
 }
 
-function drawForecastChart(future) {
-  const ctx = document.getElementById("forecastChart").getContext("2d");
+function drawForecastChart(f) {
+  const ctx = document.getElementById("forecastChart");
   if (forecastChart) forecastChart.destroy();
+  forecastChart = new Chart(ctx,{
+    type:"bar",
+    data:{ labels:["Now","+10","+20"], datasets:[{ data:f.map(v=>v*100), backgroundColor:["#2a9d8f","#f4a261","#e63946"] }]},
+    options:{ scales:{ y:{min:0,max:100} } }
+  });
+}
 
-  forecastChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["Now", "+10 min", "+20 min"],
-      datasets: [{
-        data: future.map(v => Math.round(v * 100)),
-        backgroundColor: ["#2a9d8f", "#f4a261", "#e63946"]
+function drawHeatmap() {
+  const ctx = document.getElementById("heatmap");
+  if (heatmapChart) heatmapChart.destroy();
+  heatmapChart = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels:mliHistory.map((_,i)=>`T${i+1}`),
+      datasets:[{
+        data:mliHistory.map(v=>v*100),
+        backgroundColor:mliHistory.map(v=>v<0.4?"#2a9d8f":v<0.7?"#f4a261":"#e63946")
       }]
-    }
+    },
+    options:{ scales:{ y:{min:0,max:100} } }
   });
 }
 
-// ================== ADMIN ==================
-function updateAdminDashboard() {
-  if (!mliHistory.length) return;
-
-  const avg = Math.round(mliHistory.reduce((a,b)=>a+b,0)/mliHistory.length*100);
-  const peak = Math.round(Math.max(...mliHistory)*100);
-
-  document.getElementById("adminSummary").innerText =
-    `Average congestion: ${avg}%\nPeak congestion: ${peak}%\nPredictions logged: ${mliHistory.length}`;
-}
-
+// ================== CSV EXPORT ==================
 function exportCSV() {
-  let csv = "Time,MLI (%),Level\n";
-  mliHistory.forEach((v,i)=>{
-    csv += `${i+1},${Math.round(v*100)},${classify(v)}\n`;
-  });
-
-  const blob = new Blob([csv], { type: "text/csv" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "mess_summary.csv";
+  let csv="Index,MLI,Level\n";
+  mliHistory.forEach((v,i)=>csv+=`${i+1},${Math.round(v*100)},${classify(v)}\n`);
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="mess_summary.csv";
   a.click();
 }
 
+// ================== QR ==================
+window.onload=()=>document.getElementById("qr").src=`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${window.location.href}`;
+
 // ================== MAIN ==================
-function runPrediction() {
-  const auto = autoTimeContext();
-  if (auto.meal) document.getElementById("meal").value = auto.meal;
+function runPrediction(){
+  const auto=autoTimeContext();
+  const meal=document.getElementById("meal");
+  if(auto.meal) meal.value=auto.meal;
 
-  const queue = mapQueue(queueEl.value);
-  const seats = +seatsEl.value;
-  const service = mapService(serviceEl.value);
-  const integrity = mapDefaulters(defaultersEl.value);
-  const eatTime = +eatTimeEl.value;
+  const queue=mapQueue(queue.value);
+  const seats=+seats.value;
+  const service=mapService(service.value);
+  const integrity=mapDefaulters(defaulters.value);
+  const eat=+eatTime.value;
 
-  let momentum = previousQueue ? (queue - previousQueue) / 70 : 0;
-  previousQueue = queue;
+  let momentum=previousQueue? (queue-previousQueue)/70:0;
+  previousQueue=queue;
 
-  const raw = calculateMLI(queue, seats, service, integrity, eatTime, momentum, auto.peak);
-  const mli = smoothMLI(raw);
+  const mli=smoothMLI(calculateMLI(queue,seats,service,integrity,eat,momentum,auto.peak));
+  const future=futureMLI(mli);
+  const wait=recommendedWait(mli);
 
-  const future = futureMLI(mli);
-  const wait = recommendedWait(mli);
+  level.innerText=`${classify(mli)} Crowd (MLI: ${Math.round(mli*100)})`;
+  details.innerText=`Best time to visit at ${new Date(Date.now()+wait.mins*60000).toLocaleTimeString()}`;
+  forecast.innerText=`Recommended wait: ${wait.text}`;
 
-  previousMLI = mli;
-
-  level.innerText = `${classify(mli)} Crowd (MLI: ${Math.round(mli*100)})`;
-  forecast.innerText = `Recommended wait: ${wait}`;
+  waitFill.style.width=`${Math.min(100,wait.mins*4)}%`;
+  waitText.innerText=wait.text;
 
   drawMLIChart(mliHistory);
   drawForecastChart(future);
   drawHeatmap();
-  updateAdminDashboard();
 
-  db.ref("liveMLI").push({ value: mli, time: Date.now() });
+  if(isAdmin){
+    adminSummary.innerText=`Avg: ${Math.round(mliHistory.reduce((a,b)=>a+b,0)/mliHistory.length*100)}%\nPeak: ${Math.round(Math.max(...mliHistory)*100)}%`;
+  }
 }
