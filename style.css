@@ -1,124 +1,97 @@
-/* ===== BASE ===== */
 body {
   font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  padding: 30px;
-  color: #333;
-  transition: background 0.3s, color 0.3s;
+  background:#f4f6f8;
+  padding:30px;
+}
+
+body.dark {
+  background:#121212;
+  color:#eee;
 }
 
 h1 {
-  text-align: center;
-  margin-bottom: 20px;
+  text-align:center;
 }
 
-/* ===== SECTIONS ===== */
 .inputs, .output, .admin {
-  background: white;
-  padding: 20px;
-  margin: 15px auto;
-  max-width: 650px;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  transition: background 0.3s;
-}
-
-/* ===== LABELS & INPUTS ===== */
-label {
-  font-weight: bold;
-  margin-top: 10px;
-  display: block;
-}
-
-input, select {
-  width: 100%;
-  padding: 6px;
-  margin-top: 4px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-}
-
-/* ===== BUTTONS ===== */
-button {
-  width: 100%;
-  margin-top: 15px;
-  padding: 10px;
-  background: #2a9d8f;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #21867a;
-}
-
-/* ===== ADMIN ===== */
-.admin {
-  display: none;
-}
-
-/* ===== CANVAS ===== */
-canvas {
-  width: 100% !important;
-  max-height: 260px;
-}
-
-/* ===== WAIT BAR ===== */
-.wait-bar {
-  height: 18px;
-  background: #e0e0e0;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-#waitFill {
-  height: 100%;
-  width: 0;
-  background: linear-gradient(90deg,#2a9d8f,#f4a261,#e63946);
-  transition: width 0.6s;
-}
-
-/* ===== DARK MODE ===== */
-body.dark {
-  background: #121212;
-  color: #eee;
+  background:white;
+  padding:20px;
+  margin:15px auto;
+  max-width:650px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08);
 }
 
 body.dark .inputs,
 body.dark .output,
 body.dark .admin {
-  background: #1e1e1e;
+  background:#1e1e1e;
 }
 
-/* ===== ADMIN MODAL ===== */
+label { font-weight:bold; display:block; margin-top:10px; }
+
+input, select {
+  width:100%;
+  padding:6px;
+  margin-top:4px;
+}
+
+button {
+  width:100%;
+  margin-top:12px;
+  padding:10px;
+  background:#2a9d8f;
+  color:white;
+  border:none;
+  border-radius:6px;
+}
+
+.admin { display:none; }
+
+canvas { width:100% !important; max-height:260px; }
+
+.wait-bar {
+  height:18px;
+  background:#e0e0e0;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+#waitFill {
+  height:100%;
+  width:0;
+  background:linear-gradient(90deg,#2a9d8f,#f4a261,#e63946);
+  transition:width 0.6s;
+}
+
+/* TOOLTIP */
+.tooltip { cursor:pointer; font-size:14px; }
+.tooltip-text {
+  display:none;
+  background:black;
+  color:white;
+  padding:6px;
+  border-radius:6px;
+  position:absolute;
+}
+.tooltip:hover .tooltip-text { display:block; }
+
+/* MODAL */
 .modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 999;
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.5);
 }
 
 .modal-box {
-  background: white;
-  padding: 20px;
-  width: 280px;
-  margin: 120px auto;
-  border-radius: 10px;
-  text-align: center;
+  background:white;
+  padding:20px;
+  width:280px;
+  margin:120px auto;
+  border-radius:10px;
 }
 
-/* Dark mode modal */
-body.dark .modal-box {
-  background: #1e1e1e;
-  color: #eee;
-}
-
-/* ===== MOBILE ===== */
-@media (max-width: 600px) {
-  body {
-    padding: 15px;
-  }
+@media(max-width:600px){
+  body{padding:15px}
 }
