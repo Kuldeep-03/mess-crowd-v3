@@ -3,6 +3,9 @@ let previousMLI = null;
 let previousQueue = null;
 let mliHistory = [];
 
+let mliChart = null;
+let forecastChart = null;
+
 // ================== MAPPING FUNCTIONS ==================
 function mapQueue(q) {
   if (q === "Low") return 15;
@@ -17,9 +20,9 @@ function mapService(s) {
 }
 
 function mapDefaulters(d) {
-  if (d === "Low") return 0.9;     // high queue integrity
+  if (d === "Low") return 0.9;
   if (d === "Medium") return 0.6;
-  return 0.3;                     // poor integrity
+  return 0.3;
 }
 
 // ================== CORE MLI LOGIC ==================
@@ -34,15 +37,11 @@ function calculateMLI(
   timeSlotFactor
 ) {
   const totalSeats = 100;
-
-  // Seat turnover model
   const seatReleaseRate = totalSeats / eatTime;
 
-  // Pressures
   let arrivalPressure = queue / 70;
   let servicePressure = 1 - serviceRate;
 
-  // Meal-aware weights
   let wQueue = meal === "Breakfast" ? 0.25 : 0.3;
   let wSeats = meal === "Dinner" ? 0.35 : 0.3;
   let wService = 0.25;
@@ -57,7 +56,6 @@ function calculateMLI(
     wTurnover * Math.min(1, 1 / seatReleaseRate) +
     0.1 * arrivalMomentum;
 
-  // Peak window amplification
   MLI *= timeSlotFactor;
 
   return Math.min(1, Math.max(0, MLI));
@@ -81,10 +79,10 @@ function confidence(queueIntegrity, serviceRate, seats, arrivalMomentum) {
   return Math.max(30, Math.round((1 - variance) * 100));
 }
 
-// ================== SMOOTHING (MEMORY) ==================
+// ================== SMOOTHING ==================
 function smoothMLI(curr) {
   mliHistory.push(curr);
-  if (mliHistory.length > 3) mliHistory.shift();
+  if (mliHistory.length > 5) mliHistory.shift();
 
   let sum = mliHistory.reduce((a, b) => a + b, 0);
   return sum / mliHistory.length;
@@ -107,7 +105,7 @@ function futureMLI(current, tr) {
   return [current, current, current];
 }
 
-// ================== BOTTLENECK DETECTION ==================
+// ================== BOTTLENECK ==================
 function detectBottleneck(seats, serviceRate, queueIntegrity) {
   if (seats > 85) return "Seating capacity";
   if (serviceRate < 0.5) return "Food service rate";
@@ -115,7 +113,7 @@ function detectBottleneck(seats, serviceRate, queueIntegrity) {
   return "No dominant bottleneck";
 }
 
-// ================== RECOVERY TIME ==================
+// ================== RECOVERY ==================
 function estimateRecovery(queue, eatTime) {
   const seats = 100;
   const seatReleaseRate = seats / eatTime;
@@ -127,6 +125,54 @@ function explanation(bottleneck) {
   return `Primary bottleneck: ${bottleneck}.`;
 }
 
+// ================== GRAPH FUNCTIONS ==================
+function drawMLIChart(history) {
+  const ctx = document.getElementById("mliChart").getContext("2d");
+  if (mliChart) mliChart.destroy();
+
+  mliChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: history.map((_, i) => `T${i + 1}`),
+      datasets: [{
+        label: "Mess Load Index",
+        data: history.map(v => Math.round(v * 100)),
+        borderColor: "#e63946",
+        backgroundColor: "rgba(230,57,70,0.1)",
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      scales: {
+        y: { min: 0, max: 100 }
+      }
+    }
+  });
+}
+
+function drawForecastChart(future) {
+  const ctx = document.getElementById("forecastChart").getContext("2d");
+  if (forecastChart) forecastChart.destroy();
+
+  forecastChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Now", "+10 min", "+20 min"],
+      datasets: [{
+        label: "Predicted Congestion",
+        data: future.map(v => Math.round(v * 100)),
+        backgroundColor: ["#2a9d8f", "#f4a261", "#e63946"]
+      }]
+    },
+    options: {
+      scales: {
+        y: { min: 0, max: 100 }
+      }
+    }
+  });
+}
+
 // ================== MAIN ==================
 function runPrediction() {
   const meal = document.getElementById("meal").value;
@@ -136,14 +182,12 @@ function runPrediction() {
   const queueIntegrity = mapDefaulters(document.getElementById("defaulters").value);
   const eatTime = parseInt(document.getElementById("eatTime").value);
 
-  // Arrival momentum
   let arrivalMomentum = 0;
   if (previousQueue !== null) {
     arrivalMomentum = (queueRaw - previousQueue) / 70;
   }
   previousQueue = queueRaw;
 
-  // Peak window factor (simple assumption)
   let timeSlotFactor = 1.0;
   if (seats > 70 && queueRaw > 40) timeSlotFactor = 1.15;
 
@@ -179,4 +223,7 @@ function runPrediction() {
 
   document.getElementById("forecast").innerText =
     `Forecast → Now: ${classify(future[0])}, +10 min: ${classify(future[1])}, +20 min: ${classify(future[2])}`;
+
+  drawMLIChart(mliHistory);
+  drawForecastChart(future);
 }
