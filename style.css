@@ -13,7 +13,8 @@ h1 {
 .inputs, .output {
   background: white;
   padding: 20px;
-  margin: 20px 0;
+  margin: 20px auto;
+  max-width: 600px;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
@@ -55,7 +56,7 @@ button:hover {
 }
 
 #details {
-  white-space: pre-line;   /* preserves line breaks */
+  white-space: pre-line;
   line-height: 1.5;
   color: #333;
 }
@@ -65,7 +66,32 @@ button:hover {
   font-weight: bold;
 }
 
+/* ===== CANVAS ===== */
 canvas {
+  width: 100% !important;
+  max-height: 260px;
   margin-top: 10px;
-  max-width: 100%;
+}
+
+/* ===== WAIT BAR ===== */
+.wait-bar {
+  width: 100%;
+  height: 18px;
+  background: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+#waitFill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #2a9d8f, #f4a261, #e63946);
+  transition: width 0.6s ease;
+}
+
+#waitText {
+  margin-top: 8px;
+  font-weight: bold;
+  text-align: center;
 }
