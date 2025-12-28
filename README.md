@@ -10,6 +10,22 @@ This project proposes a realistic, systems-engineering–driven solution that pr
 
 ---
 
+## 📸 Prototype Screenshots
+
+### High Congestion Scenario
+![High Crowd](screenshots/high_crowd.png)
+
+### Medium Congestion Scenario
+![Medium Crowd](screenshots/medium_crowd.png)
+
+### Low Congestion Scenario
+![Low Crowd](screenshots/low_crowd.png)
+
+### Short-Term Forecast View
+![Forecast](screenshots/forecast.png)
+
+---
+
 ## Problem Statement
 - Fixed seating capacity (~100 seats) limits throughput
 - Single serving counter with parallel queues
@@ -221,10 +237,17 @@ This project demonstrates how systems thinking, rather than blind automation, le
 ## Project Structure
 
 mess-crowd-v3/
-index.html  
-style.css  
-script.js  
-README.md  
+├── index.html # Main UI
+├── style.css # Styling
+├── script.js # Core prediction logic
+├── README.md # Project documentation
+├── LICENSE # MIT License
+└── screenshots/
+├── high_crowd.png
+├── medium_crowd.png
+├── low_crowd.png
+└── forecast.png
+
 
 ---
 
