@@ -6,6 +6,23 @@ let mliHistory = [];
 let mliChart, forecastChart, heatmapChart;
 let isAdmin = false;
 
+// ================== DOM ELEMENTS ==================
+const mealEl       = document.getElementById("meal");
+const queueEl      = document.getElementById("queue");
+const seatsEl      = document.getElementById("seats");
+const serviceEl    = document.getElementById("service");
+const defaultersEl = document.getElementById("defaulters");
+const eatTimeEl    = document.getElementById("eatTime");
+
+const levelEl      = document.getElementById("level");
+const detailsEl    = document.getElementById("details");
+const forecastEl   = document.getElementById("forecast");
+
+const waitFill     = document.getElementById("waitFill");
+const waitText     = document.getElementById("waitText");
+
+const adminSummary = document.getElementById("adminSummary");
+
 // ================== ADMIN TOGGLE ==================
 function toggleAdmin() {
   isAdmin = !isAdmin;
@@ -45,10 +62,10 @@ const classify = m => m >= 0.75 ? "High" : m >= 0.4 ? "Medium" : "Low";
 
 // ================== WAIT LOGIC ==================
 function recommendedWait(mli) {
-  if (mli >= 0.8) return { text: "20–25 min", mins: 22 };
+  if (mli >= 0.8)  return { text: "20–25 min", mins: 22 };
   if (mli >= 0.65) return { text: "15–20 min", mins: 17 };
-  if (mli >= 0.45) return { text: "8–15 min", mins: 10 };
-  if (mli >= 0.3) return { text: "3–5 min", mins: 4 };
+  if (mli >= 0.45) return { text: "8–15 min",  mins: 10 };
+  if (mli >= 0.3)  return { text: "3–5 min",   mins: 4 };
   return { text: "No waiting recommended", mins: 0 };
 }
 
@@ -56,7 +73,7 @@ function recommendedWait(mli) {
 function smoothMLI(v) {
   mliHistory.push(v);
   if (mliHistory.length > 12) mliHistory.shift();
-  return mliHistory.reduce((a,b)=>a+b,0)/mliHistory.length;
+  return mliHistory.reduce((a,b)=>a+b,0) / mliHistory.length;
 }
 
 // ================== FORECAST ==================
@@ -64,15 +81,27 @@ const futureMLI = m => [m, Math.min(1,m+0.1), Math.min(1,m+0.2)];
 
 // ================== CHARTS ==================
 function drawMLIChart(history) {
-  const ctx = document.getElementById("mliChart");
+  if (!history.length) return;
   if (mliChart) mliChart.destroy();
-  mliChart = new Chart(ctx, {
+
+  mliChart = new Chart(document.getElementById("mliChart"), {
     type:"line",
     data:{
       labels:history.map((_,i)=>`Prediction ${i+1}`),
       datasets:[
-        { label:"MLI %", data:history.map(v=>v*100), borderColor:"#e63946", fill:true, backgroundColor:"rgba(230,57,70,0.15)" },
-        { label:"Capacity Limit", data:Array(history.length).fill(80), borderDash:[5,5], borderColor:"#000" }
+        {
+          label:"MLI %",
+          data:history.map(v=>Math.round(v*100)),
+          borderColor:"#e63946",
+          fill:true,
+          backgroundColor:"rgba(230,57,70,0.15)"
+        },
+        {
+          label:"Capacity Limit",
+          data:Array(history.length).fill(80),
+          borderDash:[5,5],
+          borderColor:"#000"
+        }
       ]
     },
     options:{ scales:{ y:{min:0,max:100} } }
@@ -80,76 +109,73 @@ function drawMLIChart(history) {
 }
 
 function drawForecastChart(f) {
-  const ctx = document.getElementById("forecastChart");
   if (forecastChart) forecastChart.destroy();
-  forecastChart = new Chart(ctx,{
-    type:"bar",
-    data:{ labels:["Now","+10","+20"], datasets:[{ data:f.map(v=>v*100), backgroundColor:["#2a9d8f","#f4a261","#e63946"] }]},
-    options:{ scales:{ y:{min:0,max:100} } }
-  });
-}
-
-function drawHeatmap() {
-  const ctx = document.getElementById("heatmap");
-  if (heatmapChart) heatmapChart.destroy();
-  heatmapChart = new Chart(ctx,{
+  forecastChart = new Chart(document.getElementById("forecastChart"),{
     type:"bar",
     data:{
-      labels:mliHistory.map((_,i)=>`T${i+1}`),
+      labels:["Now","+10","+20"],
       datasets:[{
-        data:mliHistory.map(v=>v*100),
-        backgroundColor:mliHistory.map(v=>v<0.4?"#2a9d8f":v<0.7?"#f4a261":"#e63946")
+        data:f.map(v=>Math.round(v*100)),
+        backgroundColor:["#2a9d8f","#f4a261","#e63946"]
       }]
     },
     options:{ scales:{ y:{min:0,max:100} } }
   });
 }
 
-// ================== CSV EXPORT ==================
-function exportCSV() {
-  let csv="Index,MLI,Level\n";
-  mliHistory.forEach((v,i)=>csv+=`${i+1},${Math.round(v*100)},${classify(v)}\n`);
-  const blob=new Blob([csv],{type:"text/csv"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="mess_summary.csv";
-  a.click();
+function drawHeatmap() {
+  if (heatmapChart) heatmapChart.destroy();
+  heatmapChart = new Chart(document.getElementById("heatmap"),{
+    type:"bar",
+    data:{
+      labels:mliHistory.map((_,i)=>`T${i+1}`),
+      datasets:[{
+        data:mliHistory.map(v=>Math.round(v*100)),
+        backgroundColor:mliHistory.map(v =>
+          v < 0.4 ? "#2a9d8f" : v < 0.7 ? "#f4a261" : "#e63946"
+        )
+      }]
+    },
+    options:{ scales:{ y:{min:0,max:100} } }
+  });
 }
-
-// ================== QR ==================
-window.onload=()=>document.getElementById("qr").src=`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${window.location.href}`;
 
 // ================== MAIN ==================
 function runPrediction(){
-  const auto=autoTimeContext();
-  const meal=document.getElementById("meal");
-  if(auto.meal) meal.value=auto.meal;
+  const auto = autoTimeContext();
+  if(auto.meal) mealEl.value = auto.meal;
 
-  const queue=mapQueue(queue.value);
-  const seats=+seats.value;
-  const service=mapService(service.value);
-  const integrity=mapDefaulters(defaulters.value);
-  const eat=+eatTime.value;
+  const queue = mapQueue(queueEl.value);
+  const seats = +seatsEl.value;
+  const service = mapService(serviceEl.value);
+  const integrity = mapDefaulters(defaultersEl.value);
+  const eat = +eatTimeEl.value;
 
-  let momentum=previousQueue? (queue-previousQueue)/70:0;
-  previousQueue=queue;
+  let momentum = previousQueue !== null ? (queue - previousQueue)/70 : 0;
+  previousQueue = queue;
 
-  const mli=smoothMLI(calculateMLI(queue,seats,service,integrity,eat,momentum,auto.peak));
-  const future=futureMLI(mli);
-  const wait=recommendedWait(mli);
+  const mli = smoothMLI(
+    calculateMLI(queue, seats, service, integrity, eat, momentum, auto.peak)
+  );
 
-  level.innerText=`${classify(mli)} Crowd (MLI: ${Math.round(mli*100)})`;
-  details.innerText=`Best time to visit at ${new Date(Date.now()+wait.mins*60000).toLocaleTimeString()}`;
-  forecast.innerText=`Recommended wait: ${wait.text}`;
+  const future = futureMLI(mli);
+  const wait = recommendedWait(mli);
 
-  waitFill.style.width=`${Math.min(100,wait.mins*4)}%`;
-  waitText.innerText=wait.text;
+  levelEl.innerText = `${classify(mli)} Crowd (MLI: ${Math.round(mli*100)})`;
+  detailsEl.innerText =
+    `Best time to visit at ${new Date(Date.now() + wait.mins*60000).toLocaleTimeString()}`;
+  forecastEl.innerText = `Recommended wait: ${wait.text}`;
+
+  waitFill.style.width = `${Math.min(100, wait.mins*4)}%`;
+  waitText.innerText = wait.text;
 
   drawMLIChart(mliHistory);
   drawForecastChart(future);
   drawHeatmap();
 
   if(isAdmin){
-    adminSummary.innerText=`Avg: ${Math.round(mliHistory.reduce((a,b)=>a+b,0)/mliHistory.length*100)}%\nPeak: ${Math.round(Math.max(...mliHistory)*100)}%`;
+    adminSummary.innerText =
+      `Average: ${Math.round(mliHistory.reduce((a,b)=>a+b,0)/mliHistory.length*100)}%\n` +
+      `Peak: ${Math.round(Math.max(...mliHistory)*100)}%`;
   }
 }
