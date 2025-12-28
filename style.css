@@ -1,0 +1,22 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  padding: 30px;
+}
+
+.inputs, .output {
+  background: white;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 8px;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+}
+
+button {
+  margin-top: 15px;
+  padding: 8px 15px;
+}
