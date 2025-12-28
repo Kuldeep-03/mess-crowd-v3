@@ -3,6 +3,9 @@ let previousMLI = null;
 let previousQueue = null;
 let mliHistory = [];
 
+let mliChart = null;
+let forecastChart = null;
+
 // ================== MAPPING FUNCTIONS ==================
 function mapQueue(q) {
   if (q === "Low") return 15;
@@ -79,7 +82,7 @@ function confidence(queueIntegrity, serviceRate, seats, arrivalMomentum) {
 // ================== SMOOTHING ==================
 function smoothMLI(curr) {
   mliHistory.push(curr);
-  if (mliHistory.length > 3) mliHistory.shift();
+  if (mliHistory.length > 5) mliHistory.shift();
 
   let sum = mliHistory.reduce((a, b) => a + b, 0);
   return sum / mliHistory.length;
@@ -117,7 +120,7 @@ function estimateRecovery(queue, eatTime) {
   return Math.max(0, Math.round(queue / seatReleaseRate));
 }
 
-// ================== DECISION ENGINE (NEW) ==================
+// ================== DECISION ENGINE ==================
 function decisionAdvice(level, trend, recovery) {
   if (level === "High" && trend === "Increasing")
     return "❌ Avoid now. Try again after 20 minutes.";
@@ -126,6 +129,54 @@ function decisionAdvice(level, trend, recovery) {
   if (level === "Medium" && recovery > 10)
     return "⏳ Moderate crowd. Short wait expected.";
   return "✅ Good time to visit the mess.";
+}
+
+// ================== GRAPH FUNCTIONS ==================
+function drawMLIChart(history) {
+  const ctx = document.getElementById("mliChart").getContext("2d");
+  if (mliChart) mliChart.destroy();
+
+  mliChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: history.map((_, i) => `T${i + 1}`),
+      datasets: [{
+        label: "Mess Load Index",
+        data: history.map(v => Math.round(v * 100)),
+        borderColor: "#e63946",
+        backgroundColor: "rgba(230,57,70,0.15)",
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: {
+      scales: {
+        y: { min: 0, max: 100 }
+      }
+    }
+  });
+}
+
+function drawForecastChart(future) {
+  const ctx = document.getElementById("forecastChart").getContext("2d");
+  if (forecastChart) forecastChart.destroy();
+
+  forecastChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Now", "+10 min", "+20 min"],
+      datasets: [{
+        label: "Predicted Congestion",
+        data: future.map(v => Math.round(v * 100)),
+        backgroundColor: ["#2a9d8f", "#f4a261", "#e63946"]
+      }]
+    },
+    options: {
+      scales: {
+        y: { min: 0, max: 100 }
+      }
+    }
+  });
 }
 
 // ================== MAIN ==================
@@ -180,4 +231,8 @@ function runPrediction() {
 
   document.getElementById("forecast").innerText =
     `Forecast → Now: ${classify(future[0])}, +10 min: ${classify(future[1])}, +20 min: ${classify(future[2])}`;
+
+  // DRAW GRAPHS
+  drawMLIChart(mliHistory);
+  drawForecastChart(future);
 }
