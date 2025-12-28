@@ -57,7 +57,6 @@ function calculateMLI(
     0.1 * arrivalMomentum;
 
   MLI *= timeSlotFactor;
-
   return Math.min(1, Math.max(0, MLI));
 }
 
@@ -82,7 +81,7 @@ function confidence(queueIntegrity, serviceRate, seats, arrivalMomentum) {
 // ================== SMOOTHING ==================
 function smoothMLI(curr) {
   mliHistory.push(curr);
-  if (mliHistory.length > 5) mliHistory.shift();
+  if (mliHistory.length > 6) mliHistory.shift();
 
   let sum = mliHistory.reduce((a, b) => a + b, 0);
   return sum / mliHistory.length;
@@ -121,8 +120,8 @@ function estimateRecovery(queue, eatTime) {
 }
 
 // ================== DECISION ENGINE ==================
-function decisionAdvice(level, trend, recovery) {
-  if (level === "High" && trend === "Increasing")
+function decisionAdvice(level, tr, recovery) {
+  if (level === "High" && tr === "Increasing")
     return "❌ Avoid now. Try again after 20 minutes.";
   if (level === "High")
     return "⏳ High congestion. Expect long waiting time.";
@@ -133,6 +132,8 @@ function decisionAdvice(level, trend, recovery) {
 
 // ================== GRAPH FUNCTIONS ==================
 function drawMLIChart(history) {
+  if (history.length < 2) return;
+
   const ctx = document.getElementById("mliChart").getContext("2d");
   if (mliChart) mliChart.destroy();
 
@@ -141,7 +142,7 @@ function drawMLIChart(history) {
     data: {
       labels: history.map((_, i) => `T${i + 1}`),
       datasets: [{
-        label: "Mess Load Index",
+        label: "Mess Load Index (%)",
         data: history.map(v => Math.round(v * 100)),
         borderColor: "#e63946",
         backgroundColor: "rgba(230,57,70,0.15)",
@@ -150,6 +151,7 @@ function drawMLIChart(history) {
       }]
     },
     options: {
+      responsive: true,
       scales: {
         y: { min: 0, max: 100 }
       }
@@ -166,12 +168,13 @@ function drawForecastChart(future) {
     data: {
       labels: ["Now", "+10 min", "+20 min"],
       datasets: [{
-        label: "Predicted Congestion",
+        label: "Predicted Congestion (%)",
         data: future.map(v => Math.round(v * 100)),
         backgroundColor: ["#2a9d8f", "#f4a261", "#e63946"]
       }]
     },
     options: {
+      responsive: true,
       scales: {
         y: { min: 0, max: 100 }
       }
@@ -232,7 +235,6 @@ function runPrediction() {
   document.getElementById("forecast").innerText =
     `Forecast → Now: ${classify(future[0])}, +10 min: ${classify(future[1])}, +20 min: ${classify(future[2])}`;
 
-  // DRAW GRAPHS
   drawMLIChart(mliHistory);
   drawForecastChart(future);
 }
