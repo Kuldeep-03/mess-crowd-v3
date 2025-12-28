@@ -5,18 +5,19 @@
   <title>Smart Mess Crowd Predictor</title>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <h1>🍽️ Smart Mess Crowd Management</h1>
 
-<!-- ===== ADMIN LOGIN TOGGLE ===== -->
+<!-- ===== TOP CONTROLS ===== -->
 <div class="admin-login">
   <button onclick="toggleAdmin()">🔐 Admin Login</button>
+  <button onclick="toggleDark()">🌙 Dark Mode</button>
 </div>
 
-<!-- ===== USER INPUT ===== -->
+<!-- ===== INPUTS ===== -->
 <div class="inputs">
-
   <label>Meal Type</label>
   <select id="meal">
     <option>Breakfast</option>
@@ -59,6 +60,11 @@
   <h2 id="level"></h2>
   <p id="details"></p>
   <p id="forecast"></p>
+
+  <span class="tooltip">
+    🤖 Why this prediction?
+    <span class="tooltip-text" id="aiTip"></span>
+  </span>
 </div>
 
 <!-- ===== GRAPHS ===== -->
@@ -72,12 +78,10 @@
   <canvas id="forecastChart"></canvas>
 </div>
 
-<!-- ===== WAIT TIME ===== -->
+<!-- ===== WAIT ===== -->
 <div class="output">
   <h3>⏱️ Recommended Wait Time</h3>
-  <div class="wait-bar">
-    <div id="waitFill"></div>
-  </div>
+  <div class="wait-bar"><div id="waitFill"></div></div>
   <p id="waitText"></p>
 </div>
 
@@ -87,7 +91,7 @@
   <canvas id="heatmap"></canvas>
 </div>
 
-<!-- ===== QR SHARE ===== -->
+<!-- ===== QR ===== -->
 <div class="output">
   <h3>📷 Share Live Status</h3>
   <img id="qr">
@@ -97,16 +101,10 @@
 <div class="admin">
   <h2>🛠️ Admin Dashboard</h2>
   <pre id="adminSummary">No data yet</pre>
-  <button onclick="exportCSV()">⬇️ Export Daily CSV</button>
+  <button onclick="exportCSV()">⬇️ Export CSV</button>
 </div>
 
-<!-- ===== SCRIPTS ===== -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="script.js"></script>
-
-</body>
-  <button onclick="toggleDark()">🌙 Dark Mode</button>
-
+<!-- ===== ADMIN MODAL ===== -->
 <div id="adminModal" class="modal">
   <div class="modal-box">
     <h3>🔐 Admin Login</h3>
@@ -115,4 +113,9 @@
     <p id="adminError"></p>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="script.js"></script>
+
+</body>
 </html>
