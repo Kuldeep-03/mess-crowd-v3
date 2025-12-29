@@ -9,9 +9,7 @@ body.dark {
   color:#eee;
 }
 
-h1 {
-  text-align:center;
-}
+h1 { text-align:center; }
 
 .inputs, .output, .admin {
   background:white;
