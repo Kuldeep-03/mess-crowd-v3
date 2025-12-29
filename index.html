@@ -10,11 +10,18 @@
 
 <h1>🍽️ Smart Mess Crowd Management</h1>
 
+<!-- ===== TOP CONTROLS ===== -->
 <div class="top-controls">
   <button onclick="toggleAdmin()">🔐 Admin Login</button>
   <button onclick="toggleDark()">🌙 Dark Mode</button>
 </div>
 
+<!-- ===== PEAK WARNING ===== -->
+<div id="peakBanner" class="peak-banner hidden">
+  ⚠️ Peak ending soon — congestion may ease shortly
+</div>
+
+<!-- ===== INPUTS ===== -->
 <div class="card inputs">
   <label>Meal Type</label>
   <select id="meal">
@@ -53,10 +60,11 @@
   <button onclick="runPrediction()">Predict</button>
 </div>
 
+<!-- ===== OUTPUT ===== -->
 <div class="card output">
   <div id="skeleton" class="skeleton hidden"></div>
 
-  <div id="result" class="hidden">
+  <div id="result" class="hidden fade-in">
     <div id="decisionBadge" class="decision-badge"></div>
 
     <p id="oneLine" class="summary"></p>
@@ -83,6 +91,7 @@
 
 <hr class="soft-separator">
 
+<!-- ===== CHARTS ===== -->
 <div class="card chart-card">
   <h3>📈 Congestion Trend</h3>
   <canvas id="mliChart"></canvas>
@@ -98,17 +107,20 @@
   <canvas id="heatmap"></canvas>
 </div>
 
+<!-- ===== WAIT ===== -->
 <div class="card">
   <h3>⏱️ Recommended Wait</h3>
   <div class="wait-bar"><div id="waitFill"></div></div>
   <p id="waitText"></p>
 </div>
 
+<!-- ===== QR ===== -->
 <div class="card">
   <h3>📷 Share Live Status</h3>
   <img id="qr">
 </div>
 
+<!-- ===== ADMIN ===== -->
 <div class="card admin">
   <h2>🛠️ Admin Dashboard</h2>
   <pre id="adminSummary">No data yet</pre>
@@ -116,6 +128,7 @@
   <button onclick="exportCSV()">⬇️ Export CSV</button>
 </div>
 
+<!-- ===== ADMIN MODAL ===== -->
 <div id="adminModal" class="modal">
   <div class="modal-box">
     <h3>🔐 Admin Login</h3>
