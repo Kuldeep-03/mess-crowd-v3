@@ -10,13 +10,11 @@
 
 <h1>🍽️ Smart Mess Crowd Management</h1>
 
-<!-- ===== TOP CONTROLS ===== -->
 <div class="top-controls">
   <button onclick="toggleAdmin()">🔐 Admin Login</button>
   <button onclick="toggleDark()">🌙 Dark Mode</button>
 </div>
 
-<!-- ===== INPUTS ===== -->
 <div class="card inputs">
   <label>Meal Type</label>
   <select id="meal">
@@ -33,7 +31,7 @@
   </select>
 
   <label>Seats Occupied (%)</label>
-  <input type="number" id="seats" value="60" min="0" max="100">
+  <input type="number" id="seats" value="60">
 
   <label>Service Speed</label>
   <select id="service">
@@ -55,7 +53,6 @@
   <button onclick="runPrediction()">Predict</button>
 </div>
 
-<!-- ===== OUTPUT ===== -->
 <div class="card output">
   <div id="skeleton" class="skeleton hidden"></div>
 
@@ -63,7 +60,11 @@
     <div id="decisionBadge" class="decision-badge"></div>
 
     <p id="oneLine" class="summary"></p>
-    <h2 id="level"></h2>
+
+    <h2>
+      <span id="mliValue">0</span>%
+      <span id="trendArrow"></span>
+    </h2>
 
     <p id="details"></p>
     <p id="forecast"></p>
@@ -78,9 +79,10 @@
   </div>
 </div>
 
+<div id="toast" class="toast hidden"></div>
+
 <hr class="soft-separator">
 
-<!-- ===== CHARTS ===== -->
 <div class="card chart-card">
   <h3>📈 Congestion Trend</h3>
   <canvas id="mliChart"></canvas>
@@ -96,20 +98,17 @@
   <canvas id="heatmap"></canvas>
 </div>
 
-<!-- ===== WAIT ===== -->
 <div class="card">
   <h3>⏱️ Recommended Wait</h3>
   <div class="wait-bar"><div id="waitFill"></div></div>
   <p id="waitText"></p>
 </div>
 
-<!-- ===== QR ===== -->
 <div class="card">
   <h3>📷 Share Live Status</h3>
   <img id="qr">
 </div>
 
-<!-- ===== ADMIN ===== -->
 <div class="card admin">
   <h2>🛠️ Admin Dashboard</h2>
   <pre id="adminSummary">No data yet</pre>
@@ -117,7 +116,6 @@
   <button onclick="exportCSV()">⬇️ Export CSV</button>
 </div>
 
-<!-- ===== ADMIN MODAL ===== -->
 <div id="adminModal" class="modal">
   <div class="modal-box">
     <h3>🔐 Admin Login</h3>
