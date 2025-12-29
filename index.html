@@ -4,32 +4,20 @@
   <meta charset="UTF-8">
   <title>Smart Mess Crowd Predictor</title>
   <link rel="stylesheet" href="style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
-<!-- Background decoration -->
-<div class="bg-blur bg1"></div>
-<div class="bg-blur bg2"></div>
-
 <h1>🍽️ Smart Mess Crowd Management</h1>
 
-<!-- Top controls -->
+<!-- ===== TOP CONTROLS ===== -->
 <div class="top-controls">
   <button onclick="toggleAdmin()">🔐 Admin Login</button>
   <button onclick="toggleDark()">🌙 Dark Mode</button>
 </div>
 
-<!-- Peak window warning -->
-<div id="peakWarning" class="peak-warning hidden">
-  ⚠️ Peak ending window — congestion may spike suddenly
-</div>
-
-<!-- Inputs -->
-<div class="inputs">
-  <h3>Current Situation</h3>
-
+<!-- ===== INPUTS ===== -->
+<div class="card inputs">
   <label>Meal Type</label>
   <select id="meal">
     <option>Breakfast</option>
@@ -62,75 +50,72 @@
   </select>
 
   <label>Average Eating Time (minutes)</label>
-  <input type="number" id="eatTime" value="10" min="5" max="20">
+  <input type="number" id="eatTime" value="10">
 
-  <button class="primary" onclick="runPrediction()">Predict</button>
+  <button onclick="runPrediction()">Predict</button>
 </div>
 
-<!-- Skeleton loader -->
-<div id="loader" class="skeleton hidden"></div>
+<!-- ===== OUTPUT ===== -->
+<div class="card output">
 
-<!-- Output summary -->
-<div class="output summary">
-  <span id="decisionBadge" class="badge">—</span>
-  <h2 id="level">—</h2>
+  <!-- Skeleton loader -->
+  <div id="skeleton" class="skeleton hidden"></div>
 
-  <div class="mli-counter">
-    MLI:
-    <span id="mliValue">0</span>%
+  <div id="result" class="hidden">
+    <div id="decisionBadge" class="decision-badge"></div>
+    <h2 id="level"></h2>
+
+    <p class="summary" id="details"></p>
+    <p id="forecast"></p>
+
+    <span class="tooltip">
+      🤖 Why this prediction?
+      <span class="tooltip-text" id="aiTip"></span>
+    </span>
+
+    <div class="timestamp" id="timestamp"></div>
   </div>
-
-  <p id="details"></p>
-  <p id="forecast"></p>
-
-  <span class="tooltip">
-    🤖 Why this prediction?
-    <span class="tooltip-text" id="aiTip"></span>
-  </span>
-
-  <p class="disclaimer">
-    Prediction accuracy may reduce during sudden rushes or events.
-  </p>
 </div>
 
-<!-- Charts -->
-<div class="output">
+<hr class="soft-separator">
+
+<!-- ===== CHARTS ===== -->
+<div class="card chart-card">
   <h3>📈 Congestion Trend</h3>
   <canvas id="mliChart"></canvas>
 </div>
 
-<div class="output">
+<div class="card chart-card">
   <h3>🔮 Short-Term Forecast</h3>
   <canvas id="forecastChart"></canvas>
 </div>
 
-<!-- Wait -->
-<div class="output">
-  <h3>⏱️ Recommended Wait Time</h3>
-  <div class="wait-bar"><div id="waitFill"></div></div>
-  <p id="waitText"></p>
-</div>
-
-<!-- Heatmap -->
-<div class="output">
+<div class="card chart-card">
   <h3>🔥 Congestion Heatmap</h3>
   <canvas id="heatmap"></canvas>
 </div>
 
-<!-- QR -->
-<div class="output">
+<!-- ===== WAIT ===== -->
+<div class="card">
+  <h3>⏱️ Recommended Wait</h3>
+  <div class="wait-bar"><div id="waitFill"></div></div>
+  <p id="waitText"></p>
+</div>
+
+<!-- ===== QR ===== -->
+<div class="card">
   <h3>📷 Share Live Status</h3>
   <img id="qr">
 </div>
 
-<!-- Admin -->
-<div class="admin">
+<!-- ===== ADMIN ===== -->
+<div class="card admin">
   <h2>🛠️ Admin Dashboard</h2>
   <pre id="adminSummary">No data yet</pre>
   <button onclick="exportCSV()">⬇️ Export CSV</button>
 </div>
 
-<!-- Admin modal -->
+<!-- ===== ADMIN MODAL ===== -->
 <div id="adminModal" class="modal">
   <div class="modal-box">
     <h3>🔐 Admin Login</h3>
@@ -142,5 +127,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="script.js"></script>
+
 </body>
 </html>
