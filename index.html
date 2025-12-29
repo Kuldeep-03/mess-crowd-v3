@@ -57,16 +57,17 @@
 
 <!-- ===== OUTPUT ===== -->
 <div class="card output">
-
-  <!-- Skeleton loader -->
   <div id="skeleton" class="skeleton hidden"></div>
 
   <div id="result" class="hidden">
     <div id="decisionBadge" class="decision-badge"></div>
+
+    <p id="oneLine" class="summary"></p>
     <h2 id="level"></h2>
 
-    <p class="summary" id="details"></p>
+    <p id="details"></p>
     <p id="forecast"></p>
+    <p id="confidenceText" class="confidence"></p>
 
     <span class="tooltip">
       🤖 Why this prediction?
@@ -112,6 +113,7 @@
 <div class="card admin">
   <h2>🛠️ Admin Dashboard</h2>
   <pre id="adminSummary">No data yet</pre>
+  <p id="adminInsight"></p>
   <button onclick="exportCSV()">⬇️ Export CSV</button>
 </div>
 
