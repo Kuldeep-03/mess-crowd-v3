@@ -211,7 +211,7 @@ mess-crowd-v3/
 
 ## 🌐 LIVE DEMO
 
-https://Kuldeep-03.github.io/mess-crowd-v3/
+https://kuldeep-03.github.io/mess-crowd-v3/
 
 ---
 
